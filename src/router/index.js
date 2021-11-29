@@ -12,6 +12,11 @@ const routes = [
   {
     path:'/login',
     component:Login
+  },
+  {
+    path:'/home',
+    //路由懒加载
+    component:()=> import('../components/Home.vue')
   }
 
 ]
