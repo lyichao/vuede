@@ -50,12 +50,19 @@ export default {
     },
     methods:{
         login(){
-            this.$refs.loginFormRef.validate(valid=>{
+            this.$refs.loginFormRef.validate(async valid=>{
                 if(!valid){
                     return
                 }
                 console.log('发送登陆请求')
-
+                const {data:res} =  await this.$http.post('login',this.loginForm)
+                if(res.meta.status !== 200){
+                    return  this.$message.error(res.meta.msg);
+                }
+                this.$message({message: res.meta.msg,type: 'success'});
+                console.log('res:',res)
+                sessionStorage.setItem('userInfo',JSON.stringify(res.data))
+                this.$router.push('/home')
             })
         }
     }
