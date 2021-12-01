@@ -11,7 +11,6 @@
         <el-col :span="8">
           <el-input
             placeholder="请输入内容"
-            v-model="input3"
             class="input-with-select"
           >
             <el-button slot="append" icon="el-icon-search"></el-button>
@@ -26,7 +25,34 @@
 </template>
 
 <script>
-export default {};
+export default {
+  created(){
+    this.getUserList()
+
+  },
+  data(){
+    return{
+      queryInfo:{
+        query:'',
+        pagenum:1,
+        pagesize:5
+      },
+      userList:[]
+    }
+  },
+  methods:{
+    async getUserList(){
+      const {data:res} = await this.$http.get('users',{params:this.queryInfo})
+      
+      if(res.meta.status !== 200){
+        return this.$message.error(res.meta.msg)
+      }
+      this.userList = res.data.users
+      console.log('this.userList:',this.userList)
+    }
+  }
+
+};
 </script>
 
 <style lang="less" scoped>
