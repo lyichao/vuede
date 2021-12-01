@@ -13,8 +13,10 @@
     </el-header>
     <el-container>
       <!-- 侧边栏 -->
-      <el-aside width="200px">
-        <el-menu router unique-opened :default-active="$route.path">
+      <el-aside :width="isCollapse ? '64px' : '200px'" >
+      <div class="foldBtn" @click="isCollapse = !isCollapse">|||</div>
+
+        <el-menu :collapse-transition="false" router unique-opened :default-active="$route.path" :collapse="isCollapse">
           <el-submenu
             :index="item.id + ''"
             v-for="item in menuList"
@@ -58,6 +60,8 @@ export default {
         101: "iconfont icon-shangpin",
         102: "iconfont icon-danju",
       },
+      //控制折叠左侧菜单
+      isCollapse:false
     };
   },
   created() {
@@ -122,9 +126,26 @@ export default {
 }
 .el-aside {
   .el-menu {
+    border-right: 0;
     .iconfont {
       margin-right: 10px;
     }
   }
+  .foldBtn{
+    background-color: #60779D;
+    display: flex;
+    flex: 1;
+    font-size: 12px;
+    line-height: 24px;
+    justify-content: center;
+    align-items: center;
+    color: #FFFFFF;
+    letter-spacing: 0.2rem;
+    cursor: pointer;
+  }
+}
+.el-main{
+  background-color: #eaedf1;
+
 }
 </style>

@@ -22,9 +22,14 @@ const routes = [
       {
         path:'/welcome',
         component:()=> import('../components/index/Welcome.vue')
+      },
+      {
+        path:'/users',
+        component:()=> import('../components/user/Users.vue')
       }
     ]
   }
+  
 
 ]
 
