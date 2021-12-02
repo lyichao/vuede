@@ -9,8 +9,8 @@
     <el-card>
       <el-row :gutter="20">
         <el-col :span="8">
-          <el-input placeholder="请输入内容" class="input-with-select">
-            <el-button slot="append" icon="el-icon-search"></el-button>
+          <el-input clearable @clear="getUserList" placeholder="请输入内容" class="input-with-select" v-model="queryInfo.query">
+            <el-button slot="append" icon="el-icon-search" @click="getUserList"></el-button>
           </el-input>
         </el-col>
         <el-col :span="4">
@@ -26,7 +26,7 @@
         <el-table-column label="角色" prop="role_name"></el-table-column>
         <el-table-column label="状态">
           <template slot-scope="scope">
-            <el-switch v-model="scope.row.mg_state"></el-switch>
+            <el-switch v-model="scope.row.mg_state" @change="userStateChange(scope.row)"></el-switch>
           </template>
         </el-table-column>
         <el-table-column label="操作" prop="role_name">
@@ -111,6 +111,16 @@ export default {
       this.queryInfo.pagenum = val
       this.getUserList()
     },
+    async userStateChange(data){
+      console.log('data=>',data)
+      const {data:res} = await this.$http.put(`users/${data.id}/state/${data.mg_state}`)
+      console.log("userStateChange:", res);
+      if(res.meta.status !== 200){
+        data.mg_state = !data.mg_state
+        return this.$message.error(res.meta.msg)
+      }
+      this.getUserList()
+    }
   },
 };
 </script>
