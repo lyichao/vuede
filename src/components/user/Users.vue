@@ -18,7 +18,7 @@
         </el-col>
       </el-row>
 
-      <el-table :data="userList" border stripe >
+      <el-table :data="userList" border stripe>
         <el-table-column label="索引" type="index"></el-table-column>
         <el-table-column label="姓名" prop="username"></el-table-column>
         <el-table-column label="邮箱" prop="email"></el-table-column>
@@ -41,7 +41,12 @@
               icon="el-icon-delete"
               size="mini"
             ></el-button>
-            <el-tooltip effect="dark" content="分配角色" placement="top" :enterable="false">
+            <el-tooltip
+              effect="dark"
+              content="分配角色"
+              placement="top"
+              :enterable="false"
+            >
               <el-button
                 type="primary"
                 icon="el-icon-setting"
@@ -51,6 +56,17 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="queryInfo.pagenum"
+        :page-sizes="[1, 2, 5, 10]"
+        :page-size="queryInfo.pagesize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+      >
+      </el-pagination>
     </el-card>
   </div>
 </template>
@@ -68,9 +84,11 @@ export default {
         pagesize: 5,
       },
       userList: [],
+      total: 0,
     };
   },
   methods: {
+    //获取用户列表
     async getUserList() {
       const { data: res } = await this.$http.get("users", {
         params: this.queryInfo,
@@ -80,7 +98,18 @@ export default {
         return this.$message.error(res.meta.msg);
       }
       this.userList = res.data.users;
+      this.total = res.data.total;
       console.log("this.userList:", this.userList);
+    },
+    handleSizeChange(val) {
+      console.log(`每页 ${val} 条`);
+      this.queryInfo.pagesize = val
+      this.getUserList()
+    },
+    handleCurrentChange(val) {
+      console.log(`当前页: ${val}`);
+      this.queryInfo.pagenum = val
+      this.getUserList()
     },
   },
 };
