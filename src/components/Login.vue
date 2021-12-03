@@ -77,6 +77,7 @@ export default {
   justify-content: center;
   align-items: center;
   .loginRight {
+    margin-left: 60px;
     width: 400px;
     height: 350px;
     background-color: #ffffff;
