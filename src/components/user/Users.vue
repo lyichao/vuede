@@ -45,11 +45,12 @@
           </template>
         </el-table-column>
         <el-table-column label="操作" prop="role_name">
-          <template>
+          <template slot-scope="scope">
             <el-button
               type="primary"
               icon="el-icon-edit"
               size="mini"
+              @click="showEditDialog(scope.row.id)"
             ></el-button>
             <el-button
               type="danger"
@@ -84,7 +85,12 @@
       </el-pagination>
     </el-card>
 
-    <el-dialog title="添加用户" :visible.sync="dialogVisible" width="50%">
+    <el-dialog
+      title="添加用户"
+      :visible.sync="dialogVisible"
+      width="50%"
+      @close="closeDialog"
+    >
       <el-form
         :model="ruleForm"
         :rules="rules"
@@ -96,20 +102,46 @@
           <el-input v-model="ruleForm.username"></el-input>
         </el-form-item>
         <el-form-item label="密码" prop="password">
-          <el-input v-model="ruleForm.password"></el-input>
+          <el-input v-model="ruleForm.password" show-password></el-input>
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="ruleForm.email"></el-input>
         </el-form-item>
-        <el-form-item label="手机号" prop="phone">
-          <el-input v-model="ruleForm.phone"></el-input>
+        <el-form-item label="手机号" prop="mobile">
+          <el-input v-model="ruleForm.mobile"></el-input>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="dialogVisible = false"
-          >确 定</el-button
-        >
+        <el-button type="primary" @click="addUser">确 定</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog
+      title="修改用户"
+      :visible.sync="editDialogVisible"
+      width="50%"
+      @close="editCloseDialog"
+    >
+      <el-form
+        :model="editRuleForm"
+        :rules="editRules"
+        ref="editRuleForm"
+        label-width="70px"
+        class="demo-ruleForm"
+      >
+        <el-form-item label="用户名">
+          <el-input v-model="editRuleForm.username" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="editRuleForm.email"></el-input>
+        </el-form-item>
+        <el-form-item label="手机号" prop="mobile">
+          <el-input v-model="editRuleForm.mobile"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="editUser">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -130,8 +162,17 @@ export default {
       userList: [],
       total: 0,
       dialogVisible: false,
+      editDialogVisible: false,
       ruleForm: {
-        // username
+        username: "",
+        password: "",
+        email: "",
+        mobile: "",
+      },
+      editRuleForm: {
+        username: "",
+        email: "",
+        mobile: "",
       },
       rules: {
         username: [
@@ -154,11 +195,36 @@ export default {
         ],
         email: [
           { required: true, message: "请输入邮箱", trigger: "blur" },
-          {pattern:/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/,message: "邮箱格式不正确", trigger: "blur"}
+          {
+            pattern: /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/,
+            message: "邮箱格式不正确",
+            trigger: "blur",
+          },
         ],
-        phone: [
+        mobile: [
           { required: true, message: "请输入手机号", trigger: "blur" },
-          { pattern:/^(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}$/,
+          {
+            pattern:
+              /^(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}$/,
+            message: "手机号码不正确",
+            trigger: "blur",
+          },
+        ],
+      },
+      editRules: {
+        email: [
+          { required: true, message: "请输入邮箱", trigger: "blur" },
+          {
+            pattern: /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/,
+            message: "邮箱格式不正确",
+            trigger: "blur",
+          },
+        ],
+        mobile: [
+          { required: true, message: "请输入手机号", trigger: "blur" },
+          {
+            pattern:
+              /^(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}$/,
             message: "手机号码不正确",
             trigger: "blur",
           },
@@ -201,6 +267,55 @@ export default {
         return this.$message.error(res.meta.msg);
       }
       this.getUserList();
+    },
+    closeDialog() {
+      console.log("closeDialog");
+      this.$refs.ruleForm.resetFields();
+    },
+    editCloseDialog() {
+      this.$refs.editRuleForm.resetFields();
+    },
+    addUser() {
+      this.$refs.ruleForm.validate(async (valid) => {
+        if (!valid) {
+          return;
+        }
+        const { data: res } = await this.$http.post("users", this.ruleForm);
+        console.log("res:", res);
+
+        if (res.meta.status !== 201) {
+          return this.$message.error(res.meta.msg);
+        }
+        this.dialogVisible = false;
+        this.getUserList();
+        this.$message.success(res.meta.msg);
+      });
+    },
+    async editUser() {
+      console.log("editUser:", this.editRuleForm);
+      const { data: res } = await this.$http.put(
+        `users/${this.editRuleForm.id}`,
+        {
+          email: this.editRuleForm.email,
+          mobile: this.editRuleForm.mobile,
+        }
+      );
+      
+      this.getUserList();
+      if (res.meta.status !== 200) {
+        return this.$message.error(res.meta.msg);
+      }
+      this.$message.success(res.meta.msg);
+      this.editDialogVisible = false;
+    },
+    async showEditDialog(id) {
+      this.editDialogVisible = true;
+      const { data: res } = await this.$http.get(`users/${id}`);
+      console.log("showEditDialog:", res);
+      if (res.meta.status !== 200) {
+        return this.$message.error(res.meta.msg);
+      }
+      this.editRuleForm = res.data;
     },
   },
 };
