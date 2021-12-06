@@ -26,6 +26,10 @@ const routes = [
       {
         path:'/users',
         component:()=> import('../components/user/Users.vue')
+      },
+      {
+        path:'/rights',
+        component:()=> import('../components/power/Rights.vue')
       }
     ]
   }
