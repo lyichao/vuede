@@ -12,13 +12,36 @@
         </el-row>
       </el-row>
       <el-table :data="rolesList" border stripe>
+        <el-table-column label="明细" type="expand">
+          <template slot-scope="scope">
+            <el-row v-for="(item1,index1) in scope.row.children" :key="item1.id" :class="{borderBottom:true,borderTop:index1 === 0,vCenter:true}">
+              <el-col :span="5" >
+                <el-tag closable>{{ item1.authName }}</el-tag>
+                <i class="el-icon-caret-right"></i>
+                </el-col
+              >
+              <el-col :span="19">
+                <el-row v-for="(item2,index2) in item1.children" :key="item2.id" :class="{borderTop:index2!==0,vCenter:true}">
+                  <el-col :span="6">
+                    <el-tag type="success" closable>{{ item2.authName }}</el-tag>
+                    <i class="el-icon-caret-right"></i>
+                  </el-col>
+                  <el-col :span="18" >
+                    <el-tag type="warning" closable v-for="item3 in item2.children" :key="item3.id">{{ item3.authName }}</el-tag>
+                  </el-col>
+                </el-row>
+
+              </el-col>
+            </el-row>
+          </template>
+        </el-table-column>
         <el-table-column label="序号" type="index"></el-table-column>
         <el-table-column label="角色名称" prop="roleName"></el-table-column>
         <el-table-column label="角色描叙" prop="roleDesc"></el-table-column>
         <el-table-column label="操作">
-          <template>
+          <template slot-scope="scope">
             <el-button size="mini" type="primary" icon="el-icon-edit">编辑</el-button>
-            <el-button size="mini" type="danger" icon="el-icon-delete">删除</el-button>
+            <el-button size="mini" type="danger" icon="el-icon-delete" @click="deleteRole(scope.row)">删除</el-button>
             <el-button size="mini" type="warming" icon="el-icon-setting">分配权限</el-button>
           </template>
         </el-table-column>
@@ -79,14 +102,44 @@ export default {
         if (res.meta.status !== 201) {
           return this.$message.error(res.meta.msg);
         }
-        this.dialogVisible = false
-        this.getRolesList()
-        this.$message.success(res.meta.msg)
+        this.dialogVisible = false;
+        this.getRolesList();
+        this.$message.success(res.meta.msg);
       });
+    },
+    deleteRole(data) {
+      console.log('deleteRole:', data);
+      this.$confirm(`确认删除${data.roleName}?`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(async () => {
+          const { data: res } = await this.$http.delete(`roles/${data.id}`);
+          if (res.meta.status !== 200) {
+            return this.$message.error(res.meta.msg);
+          }
+          this.getRolesList();
+          this.$message({ type: 'success', message: '删除成功!' });
+        })
+        .catch(() => {});
     },
   },
 };
 </script>
 
 <style lang="less" scoped>
+.el-tag{
+  margin: 6px;
+}
+.borderTop{
+  border-top: 1px solid #eeeeee;
+}
+.borderBottom{
+  border-bottom: 1px solid #eeeeee;
+}
+.vCenter{
+  display: flex;
+  align-items: center;
+}
 </style>
