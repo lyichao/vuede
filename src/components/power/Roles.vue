@@ -61,7 +61,7 @@
     </el-dialog>
 
     <el-dialog title="分配权限" :visible.sync="rightDialogVisible" width="50%" @close="rightDialogCLosed">
-      <el-tree :data="rightList" :props="treeProps" node-key="id" default-expand-all show-checkbox :default-checked-keys="defaultKeys"></el-tree>
+      <el-tree ref="treeRef" :data="rightList" :props="treeProps" node-key="id" default-expand-all show-checkbox :default-checked-keys="defaultKeys"></el-tree>
       <span slot="footer" class="dialog-footer">
         <el-button @click="rightDialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="allotRight">确 定</el-button>
@@ -81,6 +81,7 @@ export default {
       rightList: [],
       dialogVisible: false,
       rightDialogVisible: false,
+
       ruleForm: {
         roleName: '',
         roleDesc: '',
@@ -94,6 +95,7 @@ export default {
         children: 'children',
       },
       defaultKeys: [],
+      roleId:'',  //当情需要分配权限的角色id
     };
   },
   methods: {
@@ -162,23 +164,35 @@ export default {
         return this.$message.error(res.meta.msg);
       }
       this.rightList = res.data;
-      console.log('role:',role)
+      console.log('role:', role);
+      this.roleId = role.id
       this.rightDialogVisible = true;
-      this.getLeafKeys(role)
-      console.log('this.defaultKeys:',this.defaultKeys)
+      this.getLeafKeys(role);
+      console.log('this.defaultKeys:', this.defaultKeys);
     },
     rightDialogCLosed() {
-      this.defaultKeys = [ ]
+      this.defaultKeys = [];
     },
-    allotRight() {},
-    getLeafKeys(node){
-      if(!node.children){
-        return this.defaultKeys.push(node.id)
+    async allotRight() {
+      const keys = this.$refs.treeRef.getCheckedKeys().concat(this.$refs.treeRef.getHalfCheckedKeys());
+      const idStr = keys.join(',')
+      console.log('keys:', keys);
+      const { data: res } = await this.$http.post(`roles/${this.roleId}/rights`,{rids:idStr});
+       if (res.meta.status !== 200) {
+        return this.$message.error(res.meta.msg);
       }
-      node.children.forEach((item)=>{
-        this.getLeafKeys(item)
-      })
-    }
+      this.getRolesList();
+      this.rightDialogVisible = false;
+      this.$message({ type: 'success', message: '分配权限成功!' });
+    },
+    getLeafKeys(node) {
+      if (!node.children) {
+        return this.defaultKeys.push(node.id);
+      }
+      node.children.forEach((item) => {
+        this.getLeafKeys(item);
+      });
+    },
   },
 };
 </script>
