@@ -7,9 +7,7 @@
     </el-breadcrumb>
     <el-card>
       <el-row>
-        <el-row>
-          <el-button type="primary" @click="dialogVisible = true">添加角色</el-button>
-        </el-row>
+        <el-button type="primary" @click="dialogVisible = true">添加角色</el-button>
       </el-row>
       <el-table :data="rolesList" border stripe>
         <el-table-column label="明细" type="expand">
@@ -95,7 +93,7 @@ export default {
         children: 'children',
       },
       defaultKeys: [],
-      roleId:'',  //当情需要分配权限的角色id
+      roleId: '', //当情需要分配权限的角色id
     };
   },
   methods: {
@@ -165,7 +163,7 @@ export default {
       }
       this.rightList = res.data;
       console.log('role:', role);
-      this.roleId = role.id
+      this.roleId = role.id;
       this.rightDialogVisible = true;
       this.getLeafKeys(role);
       console.log('this.defaultKeys:', this.defaultKeys);
@@ -175,10 +173,10 @@ export default {
     },
     async allotRight() {
       const keys = this.$refs.treeRef.getCheckedKeys().concat(this.$refs.treeRef.getHalfCheckedKeys());
-      const idStr = keys.join(',')
+      const idStr = keys.join(',');
       console.log('keys:', keys);
-      const { data: res } = await this.$http.post(`roles/${this.roleId}/rights`,{rids:idStr});
-       if (res.meta.status !== 200) {
+      const { data: res } = await this.$http.post(`roles/${this.roleId}/rights`, { rids: idStr });
+      if (res.meta.status !== 200) {
         return this.$message.error(res.meta.msg);
       }
       this.getRolesList();
