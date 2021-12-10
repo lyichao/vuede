@@ -22,6 +22,8 @@
         <el-table-column label="排序" type="index"></el-table-column>
         <el-table-column label="操作" type="index"></el-table-column>
       </el-table>
+
+      <tree-table :data="categoriesList"></tree-table>
     </el-card>
   </div>
 </template>
