@@ -24,7 +24,7 @@ axios.interceptors.request.use(config =>{
 Vue.prototype.$http = axios
 
 //全局注册第三方表格组件
-Vue.component(ZkTable.name, ZkTable)
+Vue.component('tree-table', ZkTable)
 new Vue({
   router,
   render: h => h(App)
