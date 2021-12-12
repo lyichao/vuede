@@ -49,6 +49,21 @@
       >
       </el-pagination>
     </el-card>
+
+    <el-dialog title="提示" :visible.sync="showDialogVisible" width="50%">
+      <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px">
+        <el-form-item label="分类名称" prop="cat_name">
+          <el-input v-model="ruleForm.cat_name"></el-input>
+        </el-form-item>
+        <el-form-item label="父级分类">
+          <el-cascader v-model="value" :options="options" :props="{ expandTrigger: 'hover' }" @change="handleChange"></el-cascader>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -88,10 +103,16 @@ export default {
           template: 'operate', //当前列使用的模版名称
         },
       ],
+      showDialogVisible: false,
+      ruleForm: {
+        cat_name: '',
+      },
+      rules: {
+        cat_name: [{ required: true, message: '请输入分类名称', trigger: 'blur' }],
+      },
     };
   },
   methods: {
-    showDialogVisible() {},
     async getGoodsCategoriesList() {
       const { data: res } = await this.$http.get('categories', { params: this.queryInfo });
       console.log('res:', res);
