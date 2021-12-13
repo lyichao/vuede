@@ -8,22 +8,10 @@
 
     <el-card>
       <el-row>
-        <el-button type="primary" @click="showDialogVisible = true">添加分类</el-button>
+        <el-button type="primary" @click="showAddDialog">添加分类</el-button>
       </el-row>
 
-      <!-- <el-table :data="categoriesList" border stripe>
-        <el-table-column label="序号" type="index"></el-table-column>
-        <el-table-column label="分类名字" prop="cat_name"></el-table-column>
-        <el-table-column label="是否有效" prop="cat_deleted">
-            <template slot-scope="scope">
-                <i :class="[scope.row.cat_deleted ? 'el-icon-success' : 'el-icon-warning' ]"></i>
-            </template>
-        </el-table-column>
-        <el-table-column label="排序" type="index"></el-table-column>
-        <el-table-column label="操作" type="index"></el-table-column>
-      </el-table> -->
-
-      <tree-table :data="categoriesList" :columns="columns" :selection-type="false" :expand-type="false" border :show-index="true">
+      <tree-table class="treeTable" :data="categoriesList" :columns="columns" :selection-type="false" :expand-type="false" border :show-index="true">
         <template slot="isOk" slot-scope="scope">
           <i v-if="scope.row.cat_deleted" class="el-icon-error" style="color: red"></i>
           <i v-else class="el-icon-success" style="color: lightgreen"></i>
@@ -50,18 +38,18 @@
       </el-pagination>
     </el-card>
 
-    <el-dialog title="提示" :visible.sync="showDialogVisible" width="50%">
+    <el-dialog title="提示" :visible.sync="showDialogVisible" width="50%" @close="closeDialog">
       <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px">
         <el-form-item label="分类名称" prop="cat_name">
           <el-input v-model="ruleForm.cat_name"></el-input>
         </el-form-item>
         <el-form-item label="父级分类">
-          <el-cascader v-model="value" :options="options" :props="{ expandTrigger: 'hover' }" @change="handleChange"></el-cascader>
+          <el-cascader v-model="selectedKeys" :options="parentCategoriesList" clearable :props="caseaderProps" @change="handleChange"></el-cascader>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+        <el-button type="primary" @click="addCategories">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -75,6 +63,7 @@ export default {
   data() {
     return {
       categoriesList: [], //分类列表
+      parentCategoriesList: [], //父级分类列表
       queryInfo: {
         type: 3,
         pagenum: 1,
@@ -105,14 +94,27 @@ export default {
       ],
       showDialogVisible: false,
       ruleForm: {
-        cat_name: '',
+        cat_name: '', //分类名称
+        cat_pid: 0, //父级分类id
+        cat_level: 0, //分类的等级
       },
       rules: {
         cat_name: [{ required: true, message: '请输入分类名称', trigger: 'blur' }],
       },
+      //级联选择器的配置对象
+      caseaderProps: {
+        label: 'cat_name',
+        value: 'cat_id',
+        children: 'children',
+        expandTrigger: 'hover',
+        checkStrictly: true, //允许选择级联选择器中的任意项
+      },
+      //级联选择器中用户选中的数组
+      selectedKeys: [],
     };
   },
   methods: {
+    //获取商品分类数据列表
     async getGoodsCategoriesList() {
       const { data: res } = await this.$http.get('categories', { params: this.queryInfo });
       console.log('res:', res);
@@ -122,6 +124,62 @@ export default {
       this.categoriesList = res.data.result;
       this.total = res.data.total;
     },
+
+    //获取父级分类的数据列表
+    async getParentCategoriesList() {
+      const { data: res } = await this.$http.get('categories', { params: { type: 2 } });
+      console.log('getParentCategoriesList:', res);
+      if (res.meta.status !== 200) {
+        return this.$message.error(res.meta.msg);
+      }
+      this.parentCategoriesList = res.data;
+      this.getGoodsCategoriesList();
+      this.$message.success(res.meta.msg);
+    },
+
+    //展示添加分类对话框
+    showAddDialog() {
+      this.showDialogVisible = true;
+      this.getParentCategoriesList();
+    },
+
+    //监听级联选择器的改变
+    handleChange() {
+      console.log('selectedKeys:', this.selectedKeys);
+      if (this.selectedKeys.length > 0) {
+        this.ruleForm.cat_pid = this.selectedKeys[this.selectedKeys.length - 1];
+        this.ruleForm.cat_level = this.selectedKeys.length;
+      } else {
+        this.ruleForm.cat_pid = 0;
+        this.ruleForm.cat_level = 0;
+      }
+
+      // this.ruleForm.cat_pid
+    },
+
+    //监听对话框关闭事件
+    closeDialog() {
+      this.$refs.ruleForm.resetFields();
+      this.selectedKeys = [];
+      this.ruleForm.cat_pid = 0;
+      this.ruleForm.cat_level = 0;
+    },
+
+    //添加商品分类
+    addCategories() {
+      this.$refs.ruleForm.validate(async (valid) => {
+        if (!valid) {
+          return;
+        }
+        const { data: res } = await this.$http.post('categories', this.ruleForm);
+        if (res.meta.status !== 201) {
+          return this.$message.error(res.meta.msg);
+        }
+        this.getGoodsCategoriesList();
+        this.showDialogVisible = false;
+      });
+    },
+
     handleSizeChange(pagesize) {
       this.queryInfo.pagesize = pagesize;
       this.getGoodsCategoriesList();
@@ -134,5 +192,11 @@ export default {
 };
 </script>
 
-<style>
+<style lang="less" scoped>
+.el-cascader {
+  width: 100%;
+}
+.treeTable {
+  margin-top: 15px;
+}
 </style>
