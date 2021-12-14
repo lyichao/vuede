@@ -21,9 +21,9 @@
           <el-tag v-else-if="scope.row.cat_level === 1" size="mini" type="success">二级</el-tag>
           <el-tag v-else size="mini" type="warning">三级</el-tag>
         </template>
-        <template slot="operate">
-          <el-button size="mini" type="primary" class="el-icon-edit">编辑</el-button>
-          <el-button size="mini" type="danger" class="el-icon-delete">删除</el-button>
+        <template slot="operate" slot-scope="scope">
+          <el-button size="mini" type="primary" class="el-icon-edit" @click="showEditDialog(scope.row.cat_id)">编辑</el-button>
+          <el-button size="mini" type="danger" class="el-icon-delete" @click="deleteCategories(scope.row.cat_id)">删除</el-button>
         </template>
       </tree-table>
       <el-pagination
@@ -38,7 +38,7 @@
       </el-pagination>
     </el-card>
 
-    <el-dialog title="提示" :visible.sync="showDialogVisible" width="50%" @close="closeDialog">
+    <el-dialog title="添加分类" :visible.sync="showDialogVisible" width="50%" @close="closeDialog">
       <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px">
         <el-form-item label="分类名称" prop="cat_name">
           <el-input v-model="ruleForm.cat_name"></el-input>
@@ -50,6 +50,18 @@
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="addCategories">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <el-dialog title="编辑分类" :visible.sync="editDialogVisible" width="50%" @close="editCloseDialog">
+      <el-form :model="editRuleForm" :rules="editRules" ref="editRuleForm" label-width="100px">
+        <el-form-item label="分类名称" prop="cat_name">
+          <el-input v-model="editRuleForm.cat_name"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="editCategories">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -93,12 +105,21 @@ export default {
         },
       ],
       showDialogVisible: false,
+      editDialogVisible: false,
       ruleForm: {
         cat_name: '', //分类名称
         cat_pid: 0, //父级分类id
         cat_level: 0, //分类的等级
       },
+      editRuleForm: {
+        cat_name: '', //分类名称
+        cat_pid: 0, //父级分类id
+        cat_level: 0, //分类的等级
+      },
       rules: {
+        cat_name: [{ required: true, message: '请输入分类名称', trigger: 'blur' }],
+      },
+      editRules: {
         cat_name: [{ required: true, message: '请输入分类名称', trigger: 'blur' }],
       },
       //级联选择器的配置对象
@@ -165,6 +186,11 @@ export default {
       this.ruleForm.cat_level = 0;
     },
 
+    //关闭编辑对话框
+    editCloseDialog() {
+      this.$refs.editRuleForm.resetFields();
+    },
+
     //添加商品分类
     addCategories() {
       this.$refs.ruleForm.validate(async (valid) => {
@@ -178,6 +204,53 @@ export default {
         this.getGoodsCategoriesList();
         this.showDialogVisible = false;
       });
+    },
+
+    //编辑商品分类名称
+    editCategories() {
+      this.$refs.editRuleForm.validate(async (vaild) => {
+        if (!vaild) {
+          return;
+        }
+        const { data: res } = await this.$http.put(`categories/${this.editRuleForm.cat_id}`, { cat_name: this.editRuleForm.cat_name });
+        if (res.meta.status !== 200) {
+          return this.$message.error(res.meta.msg);
+        }
+        console.log('editCategories:', res);
+        this.$message.success(res.meta.msg);
+        this.getGoodsCategoriesList();
+        this.editDialogVisible = false;
+      });
+    },
+
+    //删除商品分类
+    deleteCategories(id) {
+      this.$confirm(`确认删除该商品分类吗?`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(async () => {
+          const { data: res } = await this.$http.delete(`categories/${id}`);
+          if (res.meta.status !== 200) {
+            return this.$message.error(res.meta.msg);
+          }
+          console.log('deleteCategories:',res)
+          this.getGoodsCategoriesList();
+          this.$message({ type: 'success', message: '删除成功!' });
+        })
+        .catch(() => {});
+    },
+
+    //显示编辑对话框
+    async showEditDialog(id) {
+      const { data: res } = await this.$http.get(`categories/${id}`);
+      if (res.meta.status !== 200) {
+        return this.$message.error(res.meta.msg);
+      }
+      console.log('showEditDialog:', res);
+      this.editRuleForm = res.data;
+      this.editDialogVisible = true;
     },
 
     handleSizeChange(pagesize) {
