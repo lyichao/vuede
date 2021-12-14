@@ -138,7 +138,7 @@ export default {
     //获取商品分类数据列表
     async getGoodsCategoriesList() {
       const { data: res } = await this.$http.get('categories', { params: this.queryInfo });
-      console.log('res:', res);
+      console.log('getGoodsCategoriesList:', res);
       if (res.meta.status !== 200) {
         return this.$message.error(res.meta.msg);
       }
