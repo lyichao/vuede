@@ -17,13 +17,30 @@
       <el-tabs v-model="activeName" @tab-click="handleClick">
         <el-tab-pane label="动态参数" name="0">
           <el-button type="primary" size="mini" :disabled="btnDisabled">添加参数</el-button>
-          <el-table border>
+          <el-table stripe border :data="paramsData">
             <el-table-column label="序号" type="index"> </el-table-column>
-            <el-table-column label="参数名称"> </el-table-column>
-            <el-table-column label="操作"> </el-table-column>
+            <el-table-column label="参数名称" prop="attr_name"> </el-table-column>
+            <el-table-column label="操作"> 
+              <template >
+                  <el-button type="primary" size="mini" icon="el-icon-edit">编辑</el-button>
+                  <el-button type="danger" size="mini" icon="el-icon-delete">删除</el-button>
+              </template>
+            </el-table-column>
           </el-table>
         </el-tab-pane>
-        <el-tab-pane label="静态属性" name="1"> </el-tab-pane>
+        <el-tab-pane label="静态属性" name="1">
+          <el-button type="primary" size="mini" :disabled="btnDisabled">添加属性</el-button>
+          <el-table stripe border :data="paramsData">
+            <el-table-column label="序号" type="index"> </el-table-column>
+            <el-table-column label="属性名称" prop="attr_name"> </el-table-column>
+            <el-table-column label="操作"> 
+              <template >
+                  <el-button type="primary" size="mini" icon="el-icon-edit">编辑</el-button>
+                  <el-button type="danger" size="mini" icon="el-icon-delete">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
       </el-tabs>
     </el-card>
   </div>
@@ -46,6 +63,7 @@ export default {
       selectedKeys: [],
       activeName: '0',
       btnDisabled: true,
+      paramsData:[]
     };
   },
   computed: {
@@ -67,10 +85,18 @@ export default {
     handleChange() {
       console.log('this.selectedKeys:', this.selectedKeys);
       this.btnDisabled = this.selectedKeys.length > 0 ? false : true;
-      this.getParamsData();
+      if (this.selectedKeys.length > 0) {
+        this.getParamsData();
+      }else{
+        this.paramsData = []
+      }
     },
     //监听标签页的点击事件
-    handleClick() {},
+    handleClick() {
+      if (this.selectedKeys.length > 0) {
+        this.getParamsData();
+      }
+    },
     //获取分类参数数据
     async getParamsData() {
       const { data: res } = await this.$http.get(`categories/${this.categoriesId}/attributes`, { params: { sel: this.activeName === '0' ? 'many' : 'only' } });
@@ -78,6 +104,7 @@ export default {
       if (res.meta.status !== 200) {
         return this.$message.error(res.meta.msg);
       }
+      this.paramsData = res.data
     },
   },
 };
