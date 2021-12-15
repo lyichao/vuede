@@ -48,7 +48,7 @@
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button @click="showDialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="addCategories">确 定</el-button>
       </span>
     </el-dialog>
@@ -184,6 +184,7 @@ export default {
       this.selectedKeys = [];
       this.ruleForm.cat_pid = 0;
       this.ruleForm.cat_level = 0;
+
     },
 
     //关闭编辑对话框
