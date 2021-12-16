@@ -16,33 +16,44 @@
       </el-row>
       <el-tabs v-model="activeName" @tab-click="handleClick">
         <el-tab-pane label="动态参数" name="0">
-          <el-button type="primary" size="mini" :disabled="btnDisabled">添加参数</el-button>
+          <el-button type="primary" size="mini" :disabled="btnDisabled" @click="btnClick">添加参数</el-button>
           <el-table stripe border :data="paramsData">
             <el-table-column label="序号" type="index"> </el-table-column>
             <el-table-column label="参数名称" prop="attr_name"> </el-table-column>
-            <el-table-column label="操作"> 
-              <template >
-                  <el-button type="primary" size="mini" icon="el-icon-edit">编辑</el-button>
-                  <el-button type="danger" size="mini" icon="el-icon-delete">删除</el-button>
+            <el-table-column label="操作">
+              <template slot-scope="scope">
+                <el-button type="primary" size="mini" icon="el-icon-edit" @click="editParams(scope.row)">编辑</el-button>
+                <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteParams(scope.row)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
         <el-tab-pane label="静态属性" name="1">
-          <el-button type="primary" size="mini" :disabled="btnDisabled">添加属性</el-button>
+          <el-button type="primary" size="mini" :disabled="btnDisabled" @click="btnClick">添加属性</el-button>
           <el-table stripe border :data="paramsData">
             <el-table-column label="序号" type="index"> </el-table-column>
             <el-table-column label="属性名称" prop="attr_name"> </el-table-column>
-            <el-table-column label="操作"> 
-              <template >
-                  <el-button type="primary" size="mini" icon="el-icon-edit">编辑</el-button>
-                  <el-button type="danger" size="mini" icon="el-icon-delete">删除</el-button>
+            <el-table-column label="操作">
+              <template slot-scope="scope">
+                <el-button type="primary" size="mini" icon="el-icon-edit" @click="editParams(scope.row)">编辑</el-button>
+                <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteParams(scope.row)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
       </el-tabs>
     </el-card>
+    <el-dialog :title="`添加${dialogTitle}`" :visible.sync="dialogVisible" width="50%" @close="closeDialog">
+      <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px">
+        <el-form-item :label="dialogTitle" prop="attr_name">
+          <el-input v-model="ruleForm.attr_name"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="dialogConfirmBtn">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -63,12 +74,20 @@ export default {
       selectedKeys: [],
       activeName: '0',
       btnDisabled: true,
-      paramsData:[]
+      paramsData: [],
+      dialogVisible: false,
+      rules: {
+        attr_name: [{ required: true, message: '请输入参数名称', trigger: 'blur' }],
+      },
+      ruleForm: [],
     };
   },
   computed: {
     categoriesId() {
       return this.selectedKeys.length > 0 ? this.selectedKeys[this.selectedKeys.length - 1] : null;
+    },
+    dialogTitle() {
+      return this.activeName === '0' ? '动态参数' : '静态属性';
     },
   },
   methods: {
@@ -87,8 +106,8 @@ export default {
       this.btnDisabled = this.selectedKeys.length > 0 ? false : true;
       if (this.selectedKeys.length > 0) {
         this.getParamsData();
-      }else{
-        this.paramsData = []
+      } else {
+        this.paramsData = [];
       }
     },
     //监听标签页的点击事件
@@ -104,8 +123,55 @@ export default {
       if (res.meta.status !== 200) {
         return this.$message.error(res.meta.msg);
       }
-      this.paramsData = res.data
+      this.paramsData = res.data;
     },
+    //添加按钮点击事件
+    btnClick() {
+      this.dialogVisible = true;
+    },
+    //关闭对话框
+    closeDialog() {
+      this.$refs.ruleForm.resetFields();
+    },
+    //对话框确定事件
+    dialogConfirmBtn() {
+      this.$refs.ruleForm.validate(async (valid) => {
+        if (!valid) {
+          return this.$message.error(`${this.dialogTitle}不能为空`);
+        }
+        const { data: res } = await this.$http.post(`categories/${this.categoriesId}/attributes`, {
+          attr_name: this.ruleForm.attr_name,
+          attr_sel: this.activeName === '0' ? 'many' : 'only',
+        });
+        console.log('res:', res);
+        if (res.meta.status !== 201) {
+          return this.$message.error(res.meta.msg);
+        }
+        this.dialogVisible = false;
+        this.getParamsData();
+        this.$message.success(res.meta.msg);
+      });
+    },
+    //删除参数
+    deleteParams(data) {
+      console.log('data:', data);
+      this.$confirm('确认删除此参数?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(async () => {
+          const { data: res } = await this.$http.delete(`categories/${data.cat_id}/attributes/${data.attr_id}`);
+          if (res.meta.status !== 200) {
+            return this.$message.error(res.meta.msg);
+          }
+          this.getParamsData();
+          this.$message.success(res.meta.msg);
+        })
+        .catch(() => {});
+    },
+    //编辑参数
+    editParams() {},
   },
 };
 </script>
