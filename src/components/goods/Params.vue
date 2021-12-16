@@ -54,6 +54,17 @@
         <el-button type="primary" @click="dialogConfirmBtn">确 定</el-button>
       </span>
     </el-dialog>
+    <el-dialog :title="`修改${dialogTitle}`" :visible.sync="editDialogVisible" width="50%" @close="closeEditDialog">
+      <el-form :model="editRuleForm" :rules="editRules" ref="editRuleForm" label-width="100px">
+        <el-form-item :label="dialogTitle" prop="attr_name">
+          <el-input v-model="editRuleForm.attr_name"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="editDialogConfirmBtn">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -76,10 +87,16 @@ export default {
       btnDisabled: true,
       paramsData: [],
       dialogVisible: false,
+      editDialogVisible: false,
       rules: {
         attr_name: [{ required: true, message: '请输入参数名称', trigger: 'blur' }],
       },
-      ruleForm: [],
+      editRules: {
+        attr_name: [{ required: true, message: '请输入参数名称', trigger: 'blur' }],
+      },
+      ruleForm: {},
+      editRuleForm: {},
+      attr_id: 0,
     };
   },
   computed: {
@@ -129,9 +146,13 @@ export default {
     btnClick() {
       this.dialogVisible = true;
     },
-    //关闭对话框
+    //关闭添加参数对话框
     closeDialog() {
       this.$refs.ruleForm.resetFields();
+    },
+    //关闭编辑参数对话框
+    closeEditDialog() {
+      this.$refs.editRuleForm.resetFields();
     },
     //对话框确定事件
     dialogConfirmBtn() {
@@ -148,6 +169,25 @@ export default {
           return this.$message.error(res.meta.msg);
         }
         this.dialogVisible = false;
+        this.getParamsData();
+        this.$message.success(res.meta.msg);
+      });
+    },
+    //编辑参数对话框确定事件
+    editDialogConfirmBtn() {
+      this.$refs.editRuleForm.validate(async (valid) => {
+        if (!valid) {
+          return this.$message.error(`${this.dialogTitle}不能为空`);
+        }
+        const { data: res } = await this.$http.put(`categories/${this.categoriesId}/attributes/${this.editRuleForm.attr_id}`, {
+          attr_name: this.editRuleForm.attr_name,
+          attr_sel: this.activeName === '0' ? 'many' : 'only',
+        });
+        console.log('res:', res);
+        if (res.meta.status !== 200) {
+          return this.$message.error(res.meta.msg);
+        }
+        this.editDialogVisible = false;
         this.getParamsData();
         this.$message.success(res.meta.msg);
       });
@@ -171,7 +211,18 @@ export default {
         .catch(() => {});
     },
     //编辑参数
-    editParams() {},
+    async editParams(data) {
+      console.log('data:', data);
+      const { data: res } = await this.$http.get(`categories/${data.cat_id}/attributes/${data.attr_id}`,{
+        params:{attr_sel: this.activeName === '0' ? 'many' : 'only'}
+        });
+      if (res.meta.status !== 200) {
+        return this.$message.error(res.meta.msg);
+      }
+      this.editRuleForm = res.data
+      this.editDialogVisible = true;
+
+    },
   },
 };
 </script>
