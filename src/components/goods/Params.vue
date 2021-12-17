@@ -18,6 +18,16 @@
         <el-tab-pane label="动态参数" name="0">
           <el-button type="primary" size="mini" :disabled="btnDisabled" @click="btnClick">添加参数</el-button>
           <el-table stripe border :data="paramsData">
+            <el-table-column label="明细" type="expand">
+              <template slot-scope="scope">
+                <el-tag :key="index" v-for="(item,index) in scope.row.attr_vals" closable  @close="handleClose(scope.row,index)">
+                  {{ item }}
+                </el-tag>
+                <el-input class="input-new-tag" v-if="inputVisible" v-model="inputValue" ref="saveTagInput" size="small" @keyup.enter.native="handleInputConfirm" @blur="handleInputConfirm">
+                </el-input>
+                <el-button v-else class="button-new-tag" size="small" @click="showInput">+ New Tag</el-button>
+              </template>
+            </el-table-column>
             <el-table-column label="序号" type="index"> </el-table-column>
             <el-table-column label="参数名称" prop="attr_name"> </el-table-column>
             <el-table-column label="操作">
@@ -140,6 +150,9 @@ export default {
       if (res.meta.status !== 200) {
         return this.$message.error(res.meta.msg);
       }
+      res.data.forEach((item) => {
+        item.attr_vals = item.attr_vals ? item.attr_vals.split((',') ) : [];
+      });
       this.paramsData = res.data;
     },
     //添加按钮点击事件
@@ -213,16 +226,19 @@ export default {
     //编辑参数
     async editParams(data) {
       console.log('data:', data);
-      const { data: res } = await this.$http.get(`categories/${data.cat_id}/attributes/${data.attr_id}`,{
-        params:{attr_sel: this.activeName === '0' ? 'many' : 'only'}
-        });
+      const { data: res } = await this.$http.get(`categories/${data.cat_id}/attributes/${data.attr_id}`, {
+        params: { attr_sel: this.activeName === '0' ? 'many' : 'only' },
+      });
       if (res.meta.status !== 200) {
         return this.$message.error(res.meta.msg);
       }
-      this.editRuleForm = res.data
+      this.editRuleForm = res.data;
       this.editDialogVisible = true;
-
     },
+    //删除参数标签
+    handleClose(){
+
+    }
   },
 };
 </script>
@@ -230,5 +246,8 @@ export default {
 <style lang="less" scoped>
 .selectBox {
   margin: 15px 0;
+}
+.el-tag{
+  margin: 10px;
 }
 </style>
