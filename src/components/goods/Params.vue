@@ -50,6 +50,25 @@
         <el-tab-pane label="静态属性" name="1">
           <el-button type="primary" size="mini" :disabled="btnDisabled" @click="btnClick">添加属性</el-button>
           <el-table stripe border :data="paramsData">
+             <el-table-column label="明细" type="expand">
+              <template slot-scope="scope">
+                <el-tag :key="index" v-for="(item, index) in scope.row.attr_vals" closable @close="handleClose(scope.row, index)">
+                  {{ item }}
+                </el-tag>
+                <el-input
+                  width="200"
+                  class="input-new-tag"
+                  v-if="scope.row.inputVisible"
+                  v-model="scope.row.inputValue"
+                  ref="saveTagInput"
+                  size="small"
+                  @keyup.enter.native="handleInputConfirm(scope.row)"
+                  @blur="handleInputConfirm(scope.row)"
+                >
+                </el-input>
+                <el-button v-else class="button-new-tag" size="small" @click="showInput(scope.row)">+ New Tag</el-button>
+              </template>
+            </el-table-column>
             <el-table-column label="序号" type="index"> </el-table-column>
             <el-table-column label="属性名称" prop="attr_name"> </el-table-column>
             <el-table-column label="操作">
