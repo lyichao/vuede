@@ -20,6 +20,9 @@ axios.interceptors.request.use(config =>{
   config.headers.Authorization = userInfo ? userInfo.token : ''
   return config
 })
+//工具库
+import utils from './libs/utils'
+Vue.prototype.$utils = utils
 
 Vue.prototype.$http = axios
 
