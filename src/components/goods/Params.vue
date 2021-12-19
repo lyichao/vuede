@@ -20,12 +20,21 @@
           <el-table stripe border :data="paramsData">
             <el-table-column label="明细" type="expand">
               <template slot-scope="scope">
-                <el-tag :key="index" v-for="(item,index) in scope.row.attr_vals" closable  @close="handleClose(scope.row,index)">
+                <el-tag :key="index" v-for="(item, index) in scope.row.attr_vals" closable @close="handleClose(scope.row, index)">
                   {{ item }}
                 </el-tag>
-                <el-input class="input-new-tag" v-if="inputVisible" v-model="inputValue" ref="saveTagInput" size="small" @keyup.enter.native="handleInputConfirm" @blur="handleInputConfirm">
+                <el-input
+                  width="200"
+                  class="input-new-tag"
+                  v-if="scope.row.inputVisible"
+                  v-model="scope.row.inputValue"
+                  ref="saveTagInput"
+                  size="small"
+                  @keyup.enter.native="handleInputConfirm(scope.row)"
+                  @blur="handleInputConfirm(scope.row)"
+                >
                 </el-input>
-                <el-button v-else class="button-new-tag" size="small" @click="showInput">+ New Tag</el-button>
+                <el-button v-else class="button-new-tag" size="small" @click="showInput(scope.row)">+ New Tag</el-button>
               </template>
             </el-table-column>
             <el-table-column label="序号" type="index"> </el-table-column>
@@ -151,7 +160,9 @@ export default {
         return this.$message.error(res.meta.msg);
       }
       res.data.forEach((item) => {
-        item.attr_vals = item.attr_vals ? item.attr_vals.split((',') ) : [];
+        item.attr_vals = item.attr_vals ? item.attr_vals.split(',') : [];
+        item.inputVisible = false;
+        item.inputValue = '';
       });
       this.paramsData = res.data;
     },
@@ -236,9 +247,39 @@ export default {
       this.editDialogVisible = true;
     },
     //删除参数标签
-    handleClose(){
-
-    }
+    handleClose(row, index) {
+      row.attr_vals.splice(index, 1);
+      this.updateParamsDetail(row);
+    },
+    //现实文本输入框
+    showInput(row) {
+      row.inputVisible = true;
+      this.$nextTick(() => {
+        this.$refs.saveTagInput.$refs.input.focus();
+      });
+    },
+    //监听输入框按下回车或失去焦点时事件
+    handleInputConfirm(row) {
+      if (row.inputValue.trim()) {
+        row.attr_vals.push(row.inputValue.trim());
+        this.updateParamsDetail(row);
+      }
+      row.inputVisible = false;
+      row.inputValue = '';
+    },
+    //更新参数明细
+    async updateParamsDetail(row) {
+      const { data: res } = await this.$http.put(`categories/${this.categoriesId}/attributes/${row.attr_id}`, {
+        attr_name: row.attr_name,
+        attr_sel: row.attr_sel,
+        attr_vals: row.attr_vals.join(' '),
+      });
+      console.log('updateParamsDetail:', res);
+      if (res.meta.status !== 200) {
+        return this.$message.error(res.meta.msg);
+      }
+      this.$message.success(res.meta.msg);
+    },
   },
 };
 </script>
@@ -247,7 +288,10 @@ export default {
 .selectBox {
   margin: 15px 0;
 }
-.el-tag{
+.el-tag {
   margin: 10px;
+}
+.input-new-tag {
+  width: 120px;
 }
 </style>
