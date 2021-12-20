@@ -16,7 +16,7 @@
         <el-step title="完成"></el-step>
       </el-steps>
       <el-form :model="addRuleForm" :rules="addRules" ref="addRuleForm" label-position="top">
-        <el-tabs v-model="activeIndex" tab-position="left" :before-leave="beforeTabLeave">
+        <el-tabs v-model="activeIndex" tab-position="left" :before-leave="beforeTabLeave" @tab-click="tabClick">
           <el-tab-pane label="基本信息" name="0">
             <el-form-item label="商品名称" prop="goods_name">
               <el-input v-model="addRuleForm.goods_name"></el-input>
@@ -34,8 +34,18 @@
               <el-cascader v-model="addRuleForm.goods_cat" :options="cateList" :props="cascaderProps" @change="handleChange"></el-cascader>
             </el-form-item>
           </el-tab-pane>
-          <el-tab-pane label="商品参数" name="1">商品参数</el-tab-pane>
-          <el-tab-pane label="商品属性" name="2">商品属性</el-tab-pane>
+          <el-tab-pane label="商品参数" name="1">
+            <el-form-item v-for="item in manyData" :key="item.attr_id" :label="item.attr_name">
+              <el-checkbox-group  v-model="item.attr_vals">
+                <el-checkbox border v-for="(value,index) in item.attr_vals" :key="index" :label="value"></el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+          </el-tab-pane>
+          <el-tab-pane label="商品属性" name="2">
+            <el-form-item v-for="item in onlyData" :key="item.attr_id" :label="item.attr_name">
+              <el-input v-model="item.attr_vals"></el-input>
+            </el-form-item>
+          </el-tab-pane>
           <el-tab-pane label="商品图片" name="3">商品图片</el-tab-pane>
           <el-tab-pane label="商品内容" name="4">商品内容</el-tab-pane>
         </el-tabs>
@@ -51,9 +61,9 @@ export default {
       activeIndex: '0',
       addRuleForm: {
         goods_name: '',
-        goods_price: 0,
-        goods_weight: 0,
-        goods_number: 0,
+        goods_price: null,
+        goods_weight: null,
+        goods_number: null,
         goods_cat: [],
       },
       addRules: {
@@ -69,7 +79,14 @@ export default {
         children: 'children',
         expandTrigger: 'hover',
       },
+      manyData: [],
+      onlyData: [],
     };
+  },
+  computed: {
+    cateId() {
+      return this.addRuleForm.goods_cat.length === 3 ? this.addRuleForm.goods_cat[2] : null;
+    },
   },
   mounted() {
     this.getCateList();
@@ -94,13 +111,40 @@ export default {
     beforeTabLeave(activeName, oldActivityName) {
       console.log('activeName,oldActivityName:', activeName, oldActivityName);
       if (this.addRuleForm.goods_cat.length !== 3) {
-        this.$message.error('请先选择商品分类')
-        return false
+        this.$message.error('请先选择商品分类');
+        return false;
+      }
+    },
+    //切换标签页
+    tabClick() {
+      if (this.activeIndex === '1') {
+        this.getParamsData(this.cateId, 'many');
+      } else if (this.activeIndex === '2') {
+        this.getParamsData(this.cateId, 'only');
+      }
+    },
+    //获取分类参数数据
+    async getParamsData(cateId, type) {
+      const { data: res } = await this.$http.get(`categories/${cateId}/attributes`, { params: { sel: type } });
+      console.log('getParamsData:', res);
+      if (res.meta.status !== 200) {
+        return this.$message.error(res.meta.msg);
+      }
+      if (type === 'many') {
+        res.data.forEach((item) => {
+          item.attr_vals = item.attr_vals ? item.attr_vals.split(' ') : [];
+        });
+        this.manyData = res.data;
+      } else if (type === 'only') {
+        this.onlyData = res.data;
       }
     },
   },
 };
 </script>
 
-<style>
+<style lang="less" scoped>
+.el-checkbox{
+  margin-right: 10px;
+}
 </style>
