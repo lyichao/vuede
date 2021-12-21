@@ -51,12 +51,15 @@
               <el-button size="small" type="primary">点击上传</el-button>
             </el-upload>
           </el-tab-pane>
-          <el-tab-pane label="商品内容" name="4">商品内容</el-tab-pane>
+          <el-tab-pane label="商品内容" name="4">
+            <quill-editor v-model="addRuleForm.goods_introduce" >
+            </quill-editor>
+          </el-tab-pane>
         </el-tabs>
       </el-form>
     </el-card>
     <el-dialog title="图片预览" :visible.sync="previewVisible" width="50%">
-      <img :src="previewPath" class="previewImg">
+      <img :src="previewPath" class="previewImg" />
     </el-dialog>
   </div>
 </template>
@@ -72,7 +75,8 @@ export default {
         goods_weight: null,
         goods_number: null,
         goods_cat: [],
-        imgs:[]
+        imgs: [],
+        goods_introduce:''
       },
       addRules: {
         goods_name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
@@ -93,9 +97,8 @@ export default {
       headersObj: {
         Authorization: JSON.parse(sessionStorage.getItem('userInfo')).token,
       },
-      previewVisible:false,
-      previewPath:'',
-      
+      previewVisible: false,
+      previewPath: '',
     };
   },
   computed: {
@@ -156,27 +159,26 @@ export default {
     },
     //图片预览
     handlePreview(file) {
-      this.previewVisible = true
-      this.previewPath = file.url
-
+      this.previewVisible = true;
+      this.previewPath = file.url;
     },
     //删除图片
     handleRemove(file) {
-      console.log('handleRemove:',file)
-      const filePath = file.response.data.tmp_path
-      const index = this.addRuleForm.imgs.findIndex((item)=>{
-        item.pic === filePath
-      })
-      this.addRuleForm.imgs.splice(index,1)
-      console.log('this.addRuleForm:',this.addRuleForm)
+      console.log('handleRemove:', file);
+      const filePath = file.response.data.tmp_path;
+      const index = this.addRuleForm.imgs.findIndex((item) => {
+        item.pic === filePath;
+      });
+      this.addRuleForm.imgs.splice(index, 1);
+      console.log('this.addRuleForm:', this.addRuleForm);
     },
     //监听图片上传成功
-    handleSuccess(res){
+    handleSuccess(res) {
       this.addRuleForm.imgs.push({
-        pic:res.data.tmp_path
-      })
-      console.log('this.addRuleForm:',this.addRuleForm)
-    }
+        pic: res.data.tmp_path,
+      });
+      console.log('this.addRuleForm:', this.addRuleForm);
+    },
   },
 };
 </script>
@@ -185,7 +187,7 @@ export default {
 .el-checkbox {
   margin-right: 10px;
 }
-.previewImg{
+.previewImg {
   width: 100%;
 }
 </style>

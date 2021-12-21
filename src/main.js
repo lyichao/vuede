@@ -8,7 +8,10 @@ import './assets/css/global.css'
 import './assets/fonts/iconfont.css'
 import axios from 'axios'
 import ZkTable from 'vue-table-with-tree-grid'
-
+import VueQuillEditor from 'vue-quill-editor'
+import 'quill/dist/quill.core.css' // import styles
+import 'quill/dist/quill.snow.css' // for snow theme
+import 'quill/dist/quill.bubble.css' // for bubble theme
 
 Vue.config.productionTip = false
 
@@ -23,8 +26,9 @@ axios.interceptors.request.use(config =>{
 //工具库
 import utils from './libs/utils'
 Vue.prototype.$utils = utils
-
 Vue.prototype.$http = axios
+
+Vue.use(VueQuillEditor)
 
 //全局注册第三方表格组件
 Vue.component('tree-table', ZkTable)
