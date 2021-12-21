@@ -36,8 +36,8 @@
           </el-tab-pane>
           <el-tab-pane label="商品参数" name="1">
             <el-form-item v-for="item in manyData" :key="item.attr_id" :label="item.attr_name">
-              <el-checkbox-group  v-model="item.attr_vals">
-                <el-checkbox border v-for="(value,index) in item.attr_vals" :key="index" :label="value"></el-checkbox>
+              <el-checkbox-group v-model="item.attr_vals">
+                <el-checkbox border v-for="(value, index) in item.attr_vals" :key="index" :label="value"></el-checkbox>
               </el-checkbox-group>
             </el-form-item>
           </el-tab-pane>
@@ -46,11 +46,18 @@
               <el-input v-model="item.attr_vals"></el-input>
             </el-form-item>
           </el-tab-pane>
-          <el-tab-pane label="商品图片" name="3">商品图片</el-tab-pane>
+          <el-tab-pane label="商品图片" name="3">
+            <el-upload :action="uploadUrl" :on-success="handleSuccess" :on-preview="handlePreview" :on-remove="handleRemove" list-type="picture" :headers="headersObj">
+              <el-button size="small" type="primary">点击上传</el-button>
+            </el-upload>
+          </el-tab-pane>
           <el-tab-pane label="商品内容" name="4">商品内容</el-tab-pane>
         </el-tabs>
       </el-form>
     </el-card>
+    <el-dialog title="图片预览" :visible.sync="previewVisible" width="50%">
+      <img :src="previewPath" class="previewImg">
+    </el-dialog>
   </div>
 </template>
 
@@ -65,6 +72,7 @@ export default {
         goods_weight: null,
         goods_number: null,
         goods_cat: [],
+        imgs:[]
       },
       addRules: {
         goods_name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
@@ -81,6 +89,13 @@ export default {
       },
       manyData: [],
       onlyData: [],
+      uploadUrl: 'http://www.tangxiaoyang.vip:8888/api/v2/upload',
+      headersObj: {
+        Authorization: JSON.parse(sessionStorage.getItem('userInfo')).token,
+      },
+      previewVisible:false,
+      previewPath:'',
+      
     };
   },
   computed: {
@@ -139,12 +154,38 @@ export default {
         this.onlyData = res.data;
       }
     },
+    //图片预览
+    handlePreview(file) {
+      this.previewVisible = true
+      this.previewPath = file.url
+
+    },
+    //删除图片
+    handleRemove(file) {
+      console.log('handleRemove:',file)
+      const filePath = file.response.data.tmp_path
+      const index = this.addRuleForm.imgs.findIndex((item)=>{
+        item.pic === filePath
+      })
+      this.addRuleForm.imgs.splice(index,1)
+      console.log('this.addRuleForm:',this.addRuleForm)
+    },
+    //监听图片上传成功
+    handleSuccess(res){
+      this.addRuleForm.imgs.push({
+        pic:res.data.tmp_path
+      })
+      console.log('this.addRuleForm:',this.addRuleForm)
+    }
   },
 };
 </script>
 
 <style lang="less" scoped>
-.el-checkbox{
+.el-checkbox {
   margin-right: 10px;
+}
+.previewImg{
+  width: 100%;
 }
 </style>
