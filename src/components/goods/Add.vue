@@ -22,13 +22,13 @@
               <el-input v-model="addRuleForm.goods_name"></el-input>
             </el-form-item>
             <el-form-item label="商品价格" prop="goods_price">
-              <el-input v-model.number="addRuleForm.goods_price"></el-input>
+              <el-input v-model.number="addRuleForm.goods_price" type="number"></el-input>
             </el-form-item>
             <el-form-item label="商品重量" prop="goods_weight">
-              <el-input v-model.number="addRuleForm.goods_weight"></el-input>
+              <el-input v-model.number="addRuleForm.goods_weight" type="number"></el-input>
             </el-form-item>
             <el-form-item label="商品数量" prop="goods_number">
-              <el-input v-model.number="addRuleForm.goods_number"></el-input>
+              <el-input v-model.number="addRuleForm.goods_number" type="number"></el-input>
             </el-form-item>
             <el-form-item label="商品分类">
               <el-cascader v-model="addRuleForm.goods_cat" :options="cateList" :props="cascaderProps" @change="handleChange"></el-cascader>
@@ -52,8 +52,8 @@
             </el-upload>
           </el-tab-pane>
           <el-tab-pane label="商品内容" name="4">
-            <quill-editor v-model="addRuleForm.goods_introduce" >
-            </quill-editor>
+            <quill-editor v-model="addRuleForm.goods_introduce"></quill-editor>
+            <el-button type="primary" class="addBtn" @click="addGoods">添加商品</el-button>
           </el-tab-pane>
         </el-tabs>
       </el-form>
@@ -76,7 +76,8 @@ export default {
         goods_number: null,
         goods_cat: [],
         imgs: [],
-        goods_introduce:''
+        goods_introduce: '',
+        attrs: [],
       },
       addRules: {
         goods_name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
@@ -179,6 +180,16 @@ export default {
       });
       console.log('this.addRuleForm:', this.addRuleForm);
     },
+    //添加商品
+    addGoods(){
+      this.$refs.addRuleForm.validate((valid)=>{
+        if(!valid){
+          return 
+        }
+        // const {data:res} = this.$http.post('')
+      })
+
+    }
   },
 };
 </script>
@@ -189,5 +200,8 @@ export default {
 }
 .previewImg {
   width: 100%;
+}
+.addBtn{
+  margin-top: 15px;
 }
 </style>
