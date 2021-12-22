@@ -24,8 +24,8 @@
         <el-table-column label="创建时间" prop="add_time"> </el-table-column>
         <el-table-column label="操作">
           <template slot-scope="scope">
-            <el-button type="primary" icon="el-icon-edit" size="mini" @click="showEditDialog(scope.row.id)"></el-button>
-            <el-button type="danger" icon="el-icon-delete" size="mini" @click="showDeleteDialog(scope.row)"></el-button>
+            <el-button type="primary" icon="el-icon-edit" size="mini" @click="jumpToEdit(scope.row.goods_id)"></el-button>
+            <el-button type="danger" icon="el-icon-delete" size="mini" @click="showDeleteDialog(scope.row.goods_id)"></el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -114,6 +114,10 @@ export default {
     //跳转添加商品页面
     gotoAddPage(){
         this.$router.push('/goods/add')
+    },
+    //跳转编辑页面
+    jumpToEdit(id){
+       this.$router.push(`/goods/edit?id=${id}`)
     }
   },
 };
