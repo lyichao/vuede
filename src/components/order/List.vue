@@ -212,14 +212,14 @@ export default {
 };
 </script>
 
-<style lang="less">
-.el-table td.el-table__cell,
-.el-table th.el-table__cell.is-leaf {
-  padding: 20px;
-}
-</style>
+
 <style lang="less" scoped>
 .el-cascader {
   width: 100%;
 }
+.el-table td.el-table__cell,
+.el-table th.el-table__cell.is-leaf {
+  padding: 20px;
+}
+
 </style>
