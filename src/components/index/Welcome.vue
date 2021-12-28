@@ -103,6 +103,7 @@ export default {
         }
       });
       this.initLeftCharts();
+      this.initRightCharts();
     },
     initLeftCharts() {
       var leftChart = echarts.init(document.getElementById('leftChart'));
@@ -118,7 +119,7 @@ export default {
         },
         xAxis: {
           type: 'category',
-          data: [], // ['03.20', '03.21'],
+          data: ['03.20', '03.21'],
         },
         yAxis: {
           type: 'value',
@@ -127,11 +128,103 @@ export default {
           {
             type: 'line',
             smooth: true,
-            data: [], // [260, 406]
+            data: [260, 406],
           },
         ],
       };
+
+      //升序排序
+      this.orderList.sort(function (a, b) {
+        return a.create_time - b.create_time;
+      });
+
+      //获取日期及订单总额
+      var data = [];
+      this.orderList.forEach((item) => {
+        if (item.pay_status === '1') {
+          let key = this.$utils.formatToDate(item.create_time);
+          if (!data[key]) {
+            data[key] = item.order_price;
+          } else {
+            data[key] += item.order_price;
+          }
+        }
+      });
+
+      console.log('datadatadata=>', data);
+
+      //将数据添加到图标option中
+      for (var key in data) {
+        option.xAxis.data.push(key);
+        option.series[0].data.push(data[key]);
+      }
+
       leftChart.setOption(option);
+    },
+
+    initRightCharts() {
+      var rightChart = echarts.init(document.getElementById('rightChart'));
+      var option = {
+        title: {
+          text: '订单状态',
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: '{b} : {c} ({d}%)',
+        },
+        legend: {
+          orient: 'vertical',
+          left: 'right',
+          data: [],
+        },
+        series: [
+          {
+            name: '订单状态',
+            type: 'pie',
+            radius: '55%',
+            center: ['50%', '60%'],
+            data: [],
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowColor: 'rgba(0, 0, 0, 0.5)',
+              },
+            },
+          },
+        ],
+      };
+
+      //对数据进行处理 
+      var data = [
+        {
+          name:'已付款',
+          value:0
+        },
+        {
+          name:'未付款',
+          value:0
+        }
+      ]
+
+      this.orderList.forEach(item=>{
+        if(item.pay_status === '1'){
+          data[0].value++
+        }else{
+          data[1].value++
+        }
+      })
+
+      console.log('data=>',data)
+
+      for(var item of data){
+        option.legend.data.push(item.name)
+        option.series[0].data.push(item)
+      }
+
+
+
+      rightChart.setOption(option);
     },
   },
 };
@@ -173,6 +266,7 @@ export default {
     width: 50%;
     margin: 0 8px;
     padding: 20px;
+
   }
 }
 </style>
